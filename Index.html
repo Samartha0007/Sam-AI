@@ -173,10 +173,12 @@
         const CHAT_DURATION_KEY = 'chatDuration';
         const NEXT_AVAILABLE_KEY = 'nextAvailable';
         const LAST_SESSION_KEY = 'lastSession';
-        const TOTAL_TIME = 90000; // 1.5 minutes in milliseconds
+        const TOTAL_TIME = 90000 ; // 2.5 minutes in milliseconds
         const RESET_INTERVAL = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
 
-        let timerInterval;
+        exploreButton.addEventListener('click', function() {
+            window.open('https://getupilink.com/upi/Samarthags@fam?am=100', '_blank');
+        });
 
         function updateTimer() {
             const nextAvailable = parseInt(localStorage.getItem(NEXT_AVAILABLE_KEY), 10);
@@ -186,7 +188,6 @@
                 const remainingTime = Math.max(0, nextAvailable - currentTime);
 
                 if (remainingTime <= 0) {
-                    clearInterval(timerInterval);
                     localStorage.removeItem(CHAT_DURATION_KEY);
                     localStorage.removeItem(NEXT_AVAILABLE_KEY);
                     iframe.style.display = 'block';
@@ -225,60 +226,58 @@
                 } else {
                     const remainingTime = TOTAL_TIME - (chatDuration + elapsedTime);
                     if (remainingTime <= 0) {
-                        lockChatSession(username);
+                        localStorage.setItem(CHAT_DURATION_KEY, TOTAL_TIME);
+                        localStorage.setItem(NEXT_AVAILABLE_KEY, Date.now() + RESET_INTERVAL);
+                        iframe.style.display = 'none';
+                        showModal(username);
                     } else {
                         iframe.style.display = 'block';
                         setTimeout(() => {
-                            lockChatSession(username);
+                            localStorage.setItem(CHAT_DURATION_KEY, TOTAL_TIME);
+                            localStorage.setItem(NEXT_AVAILABLE_KEY, Date.now() + RESET_INTERVAL);
+                            iframe.style.display = 'none';
+                            showModal(username);
                         }, remainingTime);
                     }
                 }
             } else {
-                localStorage.setItem(CHAT_DURATION_KEY, 0);
-                localStorage.setItem(LAST_SESSION_KEY, currentTime);
-
+                localStorage.removeItem(CHAT_DURATION_KEY);
+                localStorage.removeItem(NEXT_AVAILABLE_KEY);
+                localStorage.setItem(LAST_SESSION_KEY, Date.now());
                 iframe.style.display = 'block';
-                setTimeout(() => {
-                    lockChatSession(username);
-                }, TOTAL_TIME);
             }
 
-            timerInterval = setInterval(updateTimer, 1000);
-        }
-
-        function lockChatSession(username) {
-            iframe.style.display = 'none';
-            showModal(username);
-            const currentTime = Date.now();
-            localStorage.setItem(CHAT_DURATION_KEY, TOTAL_TIME);
-            localStorage.setItem(NEXT_AVAILABLE_KEY, currentTime + RESET_INTERVAL);
-            localStorage.setItem(LAST_SESSION_KEY, currentTime);
+            setInterval(updateTimer, 1000);
         }
 
         function showModal(username) {
-            modalUsername.textContent = `Time's up, ${username}!`;
+            modalUsername.textContent = `Hi ${username}!`;
             modal.style.display = 'flex';
             updateTimer();
         }
 
         function updatePremiumMessage(username) {
-            modalUsername.textContent = `Time's up, ${username}!`;
+            premiumMessage.textContent = `Hi ${username}, your session has ended! Upgrade to premium for unlimited access.`;
         }
 
-        startChatButton.addEventListener('click', () => {
+        startChatButton.addEventListener('click', function() {
             const username = usernameInput.value.trim();
             if (username) {
                 localStorage.setItem(USERNAME_KEY, username);
                 welcomeModal.style.display = 'none';
-                startSession();
+                updatePremiumMessage(username);
+                checkAndStartChat(username);
             }
         });
 
-        exploreButton.addEventListener('click', () => {
-            window.location.href = 'https://sam-ai-premium.com'; // replace with your actual premium page URL
-        });
+        window.onload = startSession;
 
-        startSession();
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') {
+                const currentTime = Date.now();
+                localStorage.setItem(LAST_SESSION_KEY, currentTime);
+            }
+        });
     </script>
 </body>
 </html>
