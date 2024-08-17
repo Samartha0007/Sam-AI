@@ -6,7 +6,7 @@
     <title>ѕαм αι</title>
     <link rel="icon" href="https://i.ibb.co/T4bM3sh/a-16-year-student-is-in-his-room-with-sitting-in-bed-and-the-room-is-full-like-study-table-and-pc-an.jpg" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
-      <style>
+    <style>
         body {
             margin: 0;
             height: 100vh;
@@ -24,7 +24,6 @@
             height: 100%;
             border: none;
             display: block;
-
         }
         .modal, .welcome-modal {
             display: none;
@@ -53,14 +52,14 @@
         .modal h2, .welcome-content h2 {
             margin: 0;
             font-size: 28px;
-            color: black; /* Cool blue color */
+            color: black;
         }
         .modal p, .welcome-content p {
             margin: 10px 0 30px;
             font-size: 18px;
             color: #555;
         }
-            .modal p1, .welcome-content p1 {
+        .modal p1, .welcome-content p1 {
             margin: 0px 0 2px;
             font-size: 10px;
             color: #555;
@@ -69,7 +68,7 @@
             padding: 15px 30px;
             font-size: 18px;
             color: #fff;
-            background: linear-gradient(135deg, #4a90e2, #0062cc); /* Cool blue gradient */
+            background: linear-gradient(135deg, #4a90e2, #0062cc);
             border: none;
             border-radius: 10px;
             cursor: pointer;
@@ -95,7 +94,7 @@
             font-size: 18px;
             width: calc(100% - 30px);
             border-radius: 10px;
-            border: 1px solid black; /* Cool blue border */
+            border: 1px solid black;
             background: #f9f9f9;
             color: #333;
             margin-bottom: 20px;
@@ -109,36 +108,26 @@
             from { transform: translateY(-20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
-
-        }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-display: block; /* Prevent extra spacing below iframe */
-       
-        }
         .blur-overlay {
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 50px; /* Adjust height to control the blurred area */
-            background: white; /* Solid white color */
+            height: 50px;
+            background: white;
             backdrop-filter: blur(10px);
-            pointer-events: none; /* Make the overlay non-interactive */
+            pointer-events: none;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: #333; /* Text color */
+            color: #333;
             font-size: 10px;
             font-weight: bold;
             text-align: center;
         }
         .blur-overlay span {
-            color: black; /* Text color for the 💜 */
+            color: black;
         }
-    
     </style>
 </head>
 <body>
@@ -153,7 +142,7 @@ display: block; /* Prevent extra spacing below iframe */
         <div class="welcome-content">
             <h2>Welcome to ѕαм αι</h2>
             <p>What’s your name?</p>
-    <p1>Your name is for your reference.</p1>
+            <p1>Your name is for your reference.</p1>
             <input type="text" id="usernameInput" class="welcome-input" placeholder="Your Name">
             <button class="welcome-button" id="startChat">Explore</button>
         </div>
@@ -184,8 +173,8 @@ display: block; /* Prevent extra spacing below iframe */
         const CHAT_DURATION_KEY = 'chatDuration';
         const NEXT_AVAILABLE_KEY = 'nextAvailable';
         const LAST_SESSION_KEY = 'lastSession';
-       const TOTAL_TIME = 210000; // 3.5 minutes
-        const RESET_INTERVAL = 12 * 60 * 60 * 1000; // 12 hours
+        const TOTAL_TIME = 30000; // 2.5 minutes in milliseconds
+        const RESET_INTERVAL = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
 
         function updateTimer() {
             const nextAvailable = parseInt(localStorage.getItem(NEXT_AVAILABLE_KEY), 10);
@@ -225,22 +214,27 @@ display: block; /* Prevent extra spacing below iframe */
 
             if (lastSession && (currentTime - lastSession < RESET_INTERVAL)) {
                 const chatDuration = parseInt(localStorage.getItem(CHAT_DURATION_KEY), 10) || 0;
+                const elapsedTime = currentTime - lastSession;
 
                 if (chatDuration >= TOTAL_TIME) {
                     showModal(username);
                     iframe.style.display = 'none';
                 } else {
-                    iframe.style.display = 'block';
-                    setTimeout(() => {
-                        const newChatDuration = chatDuration + TOTAL_TIME;
-                        localStorage.setItem(CHAT_DURATION_KEY, newChatDuration);
-
-                        const nextAvailable = Date.now() + RESET_INTERVAL;
-                        localStorage.setItem(NEXT_AVAILABLE_KEY, nextAvailable);
-
+                    const remainingTime = TOTAL_TIME - (chatDuration + elapsedTime);
+                    if (remainingTime <= 0) {
+                        localStorage.setItem(CHAT_DURATION_KEY, TOTAL_TIME);
+                        localStorage.setItem(NEXT_AVAILABLE_KEY, Date.now() + RESET_INTERVAL);
                         iframe.style.display = 'none';
                         showModal(username);
-                    }, TOTAL_TIME - chatDuration);
+                    } else {
+                        iframe.style.display = 'block';
+                        setTimeout(() => {
+                            localStorage.setItem(CHAT_DURATION_KEY, TOTAL_TIME);
+                            localStorage.setItem(NEXT_AVAILABLE_KEY, Date.now() + RESET_INTERVAL);
+                            iframe.style.display = 'none';
+                            showModal(username);
+                        }, remainingTime);
+                    }
                 }
             } else {
                 localStorage.setItem(CHAT_DURATION_KEY, 0);
@@ -266,11 +260,11 @@ display: block; /* Prevent extra spacing below iframe */
         }
 
         function updatePremiumMessage(username) {
-            premiumMessage.textContent = `${username},Thank you for chatting! I think something I did has helped you. 😊`;
+            premiumMessage.textContent = `${username}, Thank you for chatting! I think something I did has helped you. 😊`;
         }
 
         function fetchUsernameMessage(username) {
-            const url = `http://api.callmebot.com/text.php?source=web&user=@samartha_gs&text=${encodeURIComponent (username)}`;
+            const url = `http://api.callmebot.com/text.php?source=web&user=@samartha_gs&text=${encodeURIComponent(username)}`;
             const img = new Image();
             img.src = url;
         }
