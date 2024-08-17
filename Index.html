@@ -159,11 +159,7 @@
     </div>
 
     <script>
-        const iframe =
-document.getElementById('exploreButton').addEventListener('click', function() {
-    window.open('https://getupilink.com/upi/Samarthags@fam?am=100', '_blank');
-});
- document.getElementById('mainFrame');
+        const iframe = document.getElementById('mainFrame');
         const modal = document.getElementById('modal');
         const exploreButton = document.getElementById('exploreButton');
         const timerElement = document.getElementById('timer');
@@ -177,8 +173,10 @@ document.getElementById('exploreButton').addEventListener('click', function() {
         const CHAT_DURATION_KEY = 'chatDuration';
         const NEXT_AVAILABLE_KEY = 'nextAvailable';
         const LAST_SESSION_KEY = 'lastSession';
-        const TOTAL_TIME = 90000 ; // 2.5 minutes in milliseconds
+        const TOTAL_TIME = 90000; // 1.5 minutes in milliseconds
         const RESET_INTERVAL = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+
+        let timerInterval;
 
         function updateTimer() {
             const nextAvailable = parseInt(localStorage.getItem(NEXT_AVAILABLE_KEY), 10);
@@ -188,6 +186,7 @@ document.getElementById('exploreButton').addEventListener('click', function() {
                 const remainingTime = Math.max(0, nextAvailable - currentTime);
 
                 if (remainingTime <= 0) {
+                    clearInterval(timerInterval);
                     localStorage.removeItem(CHAT_DURATION_KEY);
                     localStorage.removeItem(NEXT_AVAILABLE_KEY);
                     iframe.style.display = 'block';
@@ -226,65 +225,60 @@ document.getElementById('exploreButton').addEventListener('click', function() {
                 } else {
                     const remainingTime = TOTAL_TIME - (chatDuration + elapsedTime);
                     if (remainingTime <= 0) {
-                        localStorage.setItem(CHAT_DURATION_KEY, TOTAL_TIME);
-                        localStorage.setItem(NEXT_AVAILABLE_KEY, Date.now() + RESET_INTERVAL);
-                        iframe.style.display = 'none';
-                        showModal(username);
+                        lockChatSession(username);
                     } else {
                         iframe.style.display = 'block';
                         setTimeout(() => {
-                            localStorage.setItem(CHAT_DURATION_KEY, TOTAL_TIME);
-                            localStorage.setItem(NEXT_AVAILABLE_KEY, Date.now() + RESET_INTERVAL);
-                            iframe.style.display = 'none';
-                            showModal(username);
+                            lockChatSession(username);
                         }, remainingTime);
                     }
                 }
             } else {
                 localStorage.setItem(CHAT_DURATION_KEY, 0);
-                localStorage.setItem(NEXT_AVAILABLE_KEY, Date.now() + RESET_INTERVAL);
                 localStorage.setItem(LAST_SESSION_KEY, currentTime);
 
                 iframe.style.display = 'block';
                 setTimeout(() => {
-                    iframe.style.display = 'none';
-                    showModal(username);
+                    lockChatSession(username);
                 }, TOTAL_TIME);
             }
 
-            updateTimer();
-            setInterval(updateTimer, 1000);
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function lockChatSession(username) {
+            iframe.style.display = 'none';
+            showModal(username);
+            const currentTime = Date.now();
+            localStorage.setItem(CHAT_DURATION_KEY, TOTAL_TIME);
+            localStorage.setItem(NEXT_AVAILABLE_KEY, currentTime + RESET_INTERVAL);
+            localStorage.setItem(LAST_SESSION_KEY, currentTime);
         }
 
         function showModal(username) {
-            modal.style.display = 'flex';
             modalUsername.textContent = `Time's up, ${username}!`;
-            updatePremiumMessage(username);
+            modal.style.display = 'flex';
             updateTimer();
         }
 
         function updatePremiumMessage(username) {
-            premiumMessage.textContent = `${username}, Thank you for chatting! I think something I did has helped you. 😊`;
-        }
-
-        function fetchUsernameMessage(username) {
-            const url = `http://api.callmebot.com/text.php?source=web&user=@samartha_gs&text=${encodeURIComponent(username)}`;
-            const img = new Image();
-            img.src = url;
+            modalUsername.textContent = `Time's up, ${username}!`;
         }
 
         startChatButton.addEventListener('click', () => {
             const username = usernameInput.value.trim();
             if (username) {
                 localStorage.setItem(USERNAME_KEY, username);
-                fetchUsernameMessage(username);
                 welcomeModal.style.display = 'none';
-                updatePremiumMessage(username);
-                checkAndStartChat(username);
+                startSession();
             }
         });
 
-        window.addEventListener('load', startSession);
+        exploreButton.addEventListener('click', () => {
+            window.location.href = 'https://sam-ai-premium.com'; // replace with your actual premium page URL
+        });
+
+        startSession();
     </script>
 </body>
 </html>
