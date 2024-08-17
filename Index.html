@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ѕαм αι</title>
+    <link rel="icon" href="https://i.ibb.co/T4bM3sh/a-16-year-student-is-in-his-room-with-sitting-in-bed-and-the-room-is-full-like-study-table-and-pc-an.jpg" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
+      <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            font-family: 'Poppins', sans-serif; 
+            background: #f0f0f0;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+        .modal, .welcome-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.5s;
+        }
+        .modal-content, .welcome-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: slideIn 0.5s;
+            position: relative;
+        }
+        .modal h2, .welcome-content h2 {
+            margin: 0;
+            font-size: 28px;
+            color: black; /* Cool blue color */
+        }
+        .modal p, .welcome-content p {
+            margin: 10px 0 30px;
+            font-size: 18px;
+            color: #555;
+        }
+            .modal p1, .welcome-content p1 {
+            margin: 0px 0 2px;
+            font-size: 10px;
+            color: #555;
+        }
+        .modal-button, .welcome-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            color: #fff;
+            background: linear-gradient(135deg, #4a90e2, #0062cc); /* Cool blue gradient */
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 70%;
+            max-width: 300px;
+            margin-bottom: 10px;
+        }
+        .modal-button:hover, .welcome-button:hover {
+            opacity: 0.85;
+            transform: translateY(-5px);
+        }
+        .modal-button:active, .welcome-button:active {
+            transform: translateY(2px);
+        }
+        .timer {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #888;
+        }
+        .welcome-input {
+            padding: 15px;
+            font-size: 18px;
+            width: calc(100% - 30px);
+            border-radius: 10px;
+            border: 1px solid black; /* Cool blue border */
+            background: #f9f9f9;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <iframe id="mainFrame" src="https://aichatbot.sendbird.com/playground/index.html?app_id=3E7AEFB8-FB6F-413E-ACA5-ADFC41007BF3&bot_id=onboarding_bot&region=ap-5"></iframe>
+
+    <!-- Welcome Modal -->
+    <div class="welcome-modal" id="welcomeModal">
+        <div class="welcome-content">
+            <h2>Welcome to ѕαм αι</h2>
+            <p>What’s your name?</p>
+    <p1>Your name is for your reference.</p1>
+            <input type="text" id="usernameInput" class="welcome-input" placeholder="Your Name">
+            <button class="welcome-button" id="startChat">Explore</button>
+        </div>
+    </div>
+
+    <!-- Premium Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2 id="modalUsername">Time's up!</h2>
+            <p id="premiumMessage">Thank you for chatting! I think something I did has helped you. 😊</p>
+            <button class="modal-button" id="exploreButton">Explore Premium !</button>
+            <div class="timer" id="timer"></div>
+        </div>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('mainFrame');
+        const modal = document.getElementById('modal');
+        const exploreButton = document.getElementById('exploreButton');
+        const timerElement = document.getElementById('timer');
+        const welcomeModal = document.getElementById('welcomeModal');
+        const startChatButton = document.getElementById('startChat');
+        const usernameInput = document.getElementById('usernameInput');
+        const premiumMessage = document.getElementById('premiumMessage');
+        const modalUsername = document.getElementById('modalUsername');
+
+        const USERNAME_KEY = 'username';
+        const CHAT_DURATION_KEY = 'chatDuration';
+        const NEXT_AVAILABLE_KEY = 'nextAvailable';
+        const LAST_SESSION_KEY = 'lastSession';
+       const TOTAL_TIME = 210000; // 3.5 minutes
+        const RESET_INTERVAL = 12 * 60 * 60 * 1000; // 12 hours
+
+        function updateTimer() {
+            const nextAvailable = parseInt(localStorage.getItem(NEXT_AVAILABLE_KEY), 10);
+            const currentTime = Date.now();
+
+            if (nextAvailable) {
+                const remainingTime = Math.max(0, nextAvailable - currentTime);
+
+                if (remainingTime <= 0) {
+                    localStorage.removeItem(CHAT_DURATION_KEY);
+                    localStorage.removeItem(NEXT_AVAILABLE_KEY);
+                    iframe.style.display = 'block';
+                    modal.style.display = 'none';
+                } else {
+                    const hours = Math.floor(remainingTime / (1000 * 60 * 60));
+                    const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+                    timerElement.textContent = `You can chat again in ${hours}h ${minutes}m ${seconds}s`;
+                }
+            }
+        }
+
+        function startSession() {
+            const username = localStorage.getItem(USERNAME_KEY);
+
+            if (!username) {
+                welcomeModal.style.display = 'flex';
+            } else {
+                updatePremiumMessage(username);
+                checkAndStartChat(username);
+            }
+        }
+
+        function checkAndStartChat(username) {
+            const lastSession = parseInt(localStorage.getItem(LAST_SESSION_KEY), 10);
+            const currentTime = Date.now();
+
+            if (lastSession && (currentTime - lastSession < RESET_INTERVAL)) {
+                const chatDuration = parseInt(localStorage.getItem(CHAT_DURATION_KEY), 10) || 0;
+
+                if (chatDuration >= TOTAL_TIME) {
+                    showModal(username);
+                    iframe.style.display = 'none';
+                } else {
+                    iframe.style.display = 'block';
+                    setTimeout(() => {
+                        const newChatDuration = chatDuration + TOTAL_TIME;
+                        localStorage.setItem(CHAT_DURATION_KEY, newChatDuration);
+
+                        const nextAvailable = Date.now() + RESET_INTERVAL;
+                        localStorage.setItem(NEXT_AVAILABLE_KEY, nextAvailable);
+
+                        iframe.style.display = 'none';
+                        showModal(username);
+                    }, TOTAL_TIME - chatDuration);
+                }
+            } else {
+                localStorage.setItem(CHAT_DURATION_KEY, 0);
+                localStorage.setItem(NEXT_AVAILABLE_KEY, Date.now() + RESET_INTERVAL);
+                localStorage.setItem(LAST_SESSION_KEY, currentTime);
+
+                iframe.style.display = 'block';
+                setTimeout(() => {
+                    iframe.style.display = 'none';
+                    showModal(username);
+                }, TOTAL_TIME);
+            }
+
+            updateTimer();
+            setInterval(updateTimer, 1000);
+        }
+
+        function showModal(username) {
+            modal.style.display = 'flex';
+            modalUsername.textContent = `Time's up, ${username}!`;
+            updatePremiumMessage(username);
+            updateTimer();
+        }
+
+        function updatePremiumMessage(username) {
+            premiumMessage.textContent = `${username},Thank you for chatting! I think something I did has helped you. 😊`;
+        }
+
+        function fetchUsernameMessage(username) {
+            const url = `http://api.callmebot.com/text.php?source=web&user=@samartha_gs&text=${encodeURIComponent (username)}`;
+            const img = new Image();
+            img.src = url;
+        }
+
+        startChatButton.addEventListener('click', () => {
+            const username = usernameInput.value.trim();
+            if (username) {
+                localStorage.setItem(USERNAME_KEY, username);
+                fetchUsernameMessage(username);
+                welcomeModal.style.display = 'none';
+                updatePremiumMessage(username);
+                checkAndStartChat(username);
+            }
+        });
+
+        window.addEventListener('load', startSession);
+    </script>
+</body>
+</html>
