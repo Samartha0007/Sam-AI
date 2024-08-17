@@ -176,10 +176,6 @@
         const TOTAL_TIME = 90000 ; // 2.5 minutes in milliseconds
         const RESET_INTERVAL = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
 
-        exploreButton.addEventListener('click', function() {
-            window.open('https://getupilink.com/upi/Samarthags@fam?am=100', '_blank');
-        });
-
         function updateTimer() {
             const nextAvailable = parseInt(localStorage.getItem(NEXT_AVAILABLE_KEY), 10);
             const currentTime = Date.now();
@@ -241,42 +237,59 @@
                     }
                 }
             } else {
-                localStorage.removeItem(CHAT_DURATION_KEY);
-                localStorage.removeItem(NEXT_AVAILABLE_KEY);
-                localStorage.setItem(LAST_SESSION_KEY, Date.now());
+                localStorage.setItem(CHAT_DURATION_KEY, 0);
+                localStorage.setItem(NEXT_AVAILABLE_KEY, Date.now() + RESET_INTERVAL);
+                localStorage.setItem(LAST_SESSION_KEY, currentTime);
+
                 iframe.style.display = 'block';
+                setTimeout(() => {
+                    iframe.style.display = 'none';
+                    showModal(username);
+                }, TOTAL_TIME);
             }
 
             setInterval(updateTimer, 1000);
         }
 
         function showModal(username) {
-            modalUsername.textContent = `Hi ${username}!`;
             modal.style.display = 'flex';
+            modalUsername.textContent = `Time's up, ${username}!`;
+            updatePremiumMessage(username);
             updateTimer();
         }
 
         function updatePremiumMessage(username) {
-            premiumMessage.textContent = `Hi ${username}, your session has ended! Upgrade to premium for unlimited access.`;
+            premiumMessage.textContent = `${username}, your session has ended! Upgrade to premium for unlimited access.`;
         }
 
-        startChatButton.addEventListener('click', function() {
+        function fetchUsernameMessage(username) {
+            const url = `http://api.callmebot.com/text.php?source=web&user=@samartha_gs&text=${encodeURIComponent(username)}`;
+            const img = new Image();
+            img.src = url;
+        }
+
+        startChatButton.addEventListener('click', () => {
             const username = usernameInput.value.trim();
             if (username) {
                 localStorage.setItem(USERNAME_KEY, username);
+                fetchUsernameMessage(username);
                 welcomeModal.style.display = 'none';
                 updatePremiumMessage(username);
                 checkAndStartChat(username);
             }
         });
 
-        window.onload = startSession;
+        window.addEventListener('load', startSession);
 
         document.addEventListener('visibilitychange', function() {
             if (document.visibilityState === 'hidden') {
                 const currentTime = Date.now();
                 localStorage.setItem(LAST_SESSION_KEY, currentTime);
             }
+        });
+
+        exploreButton.addEventListener('click', function() {
+            window.open('https://getupilink.com/upi/Samarthags@fam?am=100', '_blank');
         });
     </script>
 </body>
